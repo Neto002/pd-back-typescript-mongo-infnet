@@ -1,0 +1,18 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "nome": "Antonio Gomes Ferreira Neto",
+      "ativo": true,
+      "saldo": 1000
+    }
+  ],
+  "books": [
+    {
+      "id": 1,
+      "titulo": "Clean Code",
+      "autor": "Robert C. Martin",
+      "ano": 2008
+    }
+  ]
+}
