@@ -37,6 +37,40 @@ const options = {
           description: "Autenticação básica usando usuário e senha",
         },
       },
+      schemas: {
+        User: {
+          type: "object",
+          properties: {
+            id: {
+              type: "integer",
+              example: 1,
+            },
+            nome: {
+              type: "string",
+              example: "João da Silva",
+            },
+            ativo: {
+              type: "boolean",
+              example: true,
+            },
+          },
+          required: ["id", "nome", "ativo"],
+        },
+        CreateUserDTO: {
+          type: "object",
+          properties: {
+            nome: {
+              type: "string",
+              example: "João da Silva",
+            },
+            ativo: {
+              type: "boolean",
+              example: true,
+            },
+          },
+          required: ["nome", "ativo"],
+        },
+      },
     },
     security: [
       {
