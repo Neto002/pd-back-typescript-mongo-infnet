@@ -2,15 +2,15 @@ import { Request, Response, Router } from "express";
 import { body, param, validationResult } from "express-validator";
 import NoDataProvidedException from "../../exception/NoDataProvidedException";
 import DataValidationException from "../../exception/DataValidationException";
-import BookService from "../service/BookService";
 import { Book } from "../entity/Book";
 import { BookDTO } from "../dto/BookDTO";
+import IBookService from "../interfaces/IBookService";
 
 export default class BookController {
-  private readonly bookService: BookService;
+  private readonly bookService: IBookService;
   public router: Router = Router();
 
-  constructor(bookService: BookService = new BookService()) {
+  constructor(bookService: IBookService) {
     this.bookService = bookService;
     this.routes();
   }

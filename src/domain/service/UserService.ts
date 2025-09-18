@@ -2,13 +2,14 @@ import NotFoundException from "../../exception/NotFoundException";
 import { userSchemaToViewUserDTO } from "../../mapper/UserMapper";
 import { CreateUserDTO } from "../dto/CreateUserDTO";
 import { User } from "../entity/User";
-import UserRepository from "../repository/UserRepository";
+import IUserRepository from "../interfaces/IUserRepository";
+import IUserService from "../interfaces/IUserService";
 import { ViewUserDTO } from "./../dto/ViewUserDTO";
 
-export default class UserService {
-  private readonly userRepository: UserRepository;
+export default class UserService implements IUserService {
+  private readonly userRepository: IUserRepository;
 
-  constructor(userRepository: UserRepository = new UserRepository()) {
+  constructor(userRepository: IUserRepository) {
     this.userRepository = userRepository;
   }
 

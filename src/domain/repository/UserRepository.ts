@@ -1,10 +1,11 @@
 import fs from "fs";
 import path from "path";
-import { User } from "../entity/User";
-import { UserSchema } from "../../infra/UserSchema";
 import { DBSchema } from "../../infra/DBSchema";
+import { UserSchema } from "../../infra/UserSchema";
+import { User } from "../entity/User";
+import IUserRepository from "../interfaces/IUserRepository";
 
-export default class UserRepository {
+export default class UserRepository implements IUserRepository {
   private readonly filePath: string;
 
   constructor(filePath: string = "../../infra/db.json") {

@@ -1,160 +1,166 @@
 import { Request, Response, Router } from "express";
-import UserService from "../service/UserService";
+import { body, param, validationResult } from "express-validator";
+import DataValidationException from "../../exception/DataValidationException";
+import NoDataProvidedException from "../../exception/NoDataProvidedException";
 import { CreateUserDTO } from "../dto/CreateUserDTO";
 import { User } from "../entity/User";
-import { body, param, validationResult } from "express-validator";
-import NoDataProvidedException from "../../exception/NoDataProvidedException";
-import DataValidationException from "../../exception/DataValidationException";
+import IUserService from "../interfaces/IUserService";
 
 /**
  * @swagger
- * components:
- *   schemas:
- *     Usuario:
- *       type: object
- *       required:
- *         - nome
- *         - ativo
- *       properties:
- *         id:
- *           type: number
- *           description: ID único do usuário
- *           example: 1
- *         nome:
- *           type: string
- *           description: Nome do usuário
- *           example: "João Silva"
- *         ativo:
- *           type: boolean
- *           description: Status de ativação do usuário
- *           example: true
- *         saldo:
- *           type: number
- *           description: Saldo do usuário
- *           example: 100.50
- *         NumeroDoc:
- *           type: string
- *           description: Número do documento (KAMV)
- *           example: "12345678"
- *
- *     CriarUsuarioDTO:
- *       type: object
- *       required:
- *         - nome
- *         - ativo
- *       properties:
- *         nome:
- *           type: string
- *           description: Nome do usuário
- *           example: "Maria Santos"
- *         ativo:
- *           type: boolean
- *           description: Status de ativação do usuário
- *           example: true
- *         saldo:
- *           type: number
- *           description: Saldo inicial do usuário
- *           example: 0
- *
- *     AtualizarUsuarioDTO:
- *       type: object
- *       properties:
- *         nome:
- *           type: string
- *           description: Nome do usuário
- *           example: "João Santos"
- *         ativo:
- *           type: boolean
- *           description: Status de ativação do usuário
- *           example: false
- *         saldo:
- *           type: number
- *           description: Saldo do usuário
- *           example: 250.75
- *
- *     ViewUsuarioDTO:
- *       type: object
- *       properties:
- *         id:
- *           type: number
- *           description: ID único do usuário
- *           example: 1
- *         nome:
- *           type: string
- *           description: Nome do usuário
- *           example: "João Silva"
- *         ativo:
- *           type: boolean
- *           description: Status de ativação do usuário
- *           example: true
- *         NumeroDoc:
- *           type: string
- *           description: Número do documento (KAMV)
- *           example: "12345678"
- *
- *     Error:
- *       type: object
- *       properties:
- *         erro:
- *           type: string
- *           example: "Mensagem de erro"
- *         erros:
- *           type: array
- *           items:
- *             type: object
- *             properties:
- *               msg:
- *                 type: string
- *               param:
- *                 type: string
- *               location:
- *                 type: string
- *
- *   responses:
- *     BadRequest:
- *       description: Erro de validação
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Error'
- *     NotFound:
- *       description: Usuário não encontrado
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Error'
- *
  * tags:
- *   - name: Usuários
- *     description: Operações relacionadas aos usuários
+ *   name: Users
+ *   description: User management endpoints
  */
 export default class UserController {
-  private readonly userService: UserService;
+  private readonly userService: IUserService;
   public router: Router = Router();
 
-  constructor(userService: UserService = new UserService()) {
+  constructor(userService: IUserService) {
     this.userService = userService;
     this.routes();
   }
 
   public routes() {
+    /**
+     * @swagger
+     * /users/{id}:
+     *   get:
+     *     summary: Get user by ID
+     *     tags: [Users]
+     *     parameters:
+     *       - in: path
+     *         name: id
+     *         schema:
+     *           type: integer
+     *         required: true
+     *         description: Numeric ID of the user to get
+     *     responses:
+     *       200:
+     *         description: User found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/User'
+     *       400:
+     *         description: Invalid ID supplied
+     *       404:
+     *         description: User not found
+     */
     this.router.get(
       "/:id",
       [param("id").notEmpty().isNumeric().withMessage("ID must be numeric")],
       this.getUserById.bind(this)
     );
+
+    /**
+     * @swagger
+     * /users/{id}:
+     *   patch:
+     *     summary: Update a user by ID
+     *     tags: [Users]
+     *     parameters:
+     *       - in: path
+     *         name: id
+     *         schema:
+     *           type: integer
+     *         required: true
+     *         description: Numeric ID of the user to update
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             $ref: '#/components/schemas/User'
+     *     responses:
+     *       200:
+     *         description: User updated
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/User'
+     *       400:
+     *         description: Invalid input
+     *       404:
+     *         description: User not found
+     */
     this.router.patch(
       "/:id",
       [param("id").notEmpty().isNumeric().withMessage("ID must be numeric")],
       this.updateUser.bind(this)
     );
+
+    /**
+     * @swagger
+     * /users/{id}:
+     *   delete:
+     *     summary: Delete a user by ID
+     *     tags: [Users]
+     *     parameters:
+     *       - in: path
+     *         name: id
+     *         schema:
+     *           type: integer
+     *         required: true
+     *         description: Numeric ID of the user to delete
+     *     responses:
+     *       200:
+     *         description: User deleted
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/User'
+     *       400:
+     *         description: Invalid ID supplied
+     *       404:
+     *         description: User not found
+     */
     this.router.delete(
       "/:id",
       [param("id").notEmpty().isNumeric().withMessage("ID must be numeric")],
       this.deleteUser.bind(this)
     );
 
+    /**
+     * @swagger
+     * /users:
+     *   get:
+     *     summary: Get all users
+     *     tags: [Users]
+     *     responses:
+     *       200:
+     *         description: List of users
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                 $ref: '#/components/schemas/User'
+     */
     this.router.get("/", this.getUsers.bind(this));
+
+    /**
+     * @swagger
+     * /users:
+     *   post:
+     *     summary: Create a new user
+     *     tags: [Users]
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             $ref: '#/components/schemas/CreateUserDTO'
+     *     responses:
+     *       201:
+     *         description: User created
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/User'
+     *       400:
+     *         description: Invalid input
+     */
     this.router.post(
       "/",
       [
@@ -172,44 +178,7 @@ export default class UserController {
       this.createUser.bind(this)
     );
   }
-  /**
-   * @swagger
-   * /usuarios:
-   *   get:
-   *     summary: Busca todos os usuários
-   *     tags: [Usuários]
-   *     description: Retorna uma lista com todos os usuários cadastrados
-   *     security:
-   *       - basicAuth: []
-   *     responses:
-   *       200:
-   *         description: Lista de usuários retornada com sucesso
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: array
-   *               items:
-   *                 $ref: '#/components/schemas/ViewUsuarioDTO'
-   *             example:
-   *               - id: 1
-   *                 nome: "João Silva"
-   *                 ativo: true
-   *                 NumeroDoc: "12345678"
-   *               - id: 2
-   *                 nome: "Maria Santos"
-   *                 ativo: false
-   *                 NumeroDoc: "87654321"
-   *       401:
-   *         description: Não autorizado - Credenciais inválidas
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 error:
-   *                   type: string
-   *                   example: "Credenciais inválidas"
-   */
+
   public getUsers(req: Request, res: Response) {
     const users = this.userService.getUsers();
     return res.json(users);

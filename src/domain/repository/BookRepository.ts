@@ -3,8 +3,9 @@ import path from "path";
 import { DBSchema } from "../../infra/DBSchema";
 import { Book } from "../entity/Book";
 import { BookSchema } from "../../infra/BookSchema";
+import IBookRepository from "../interfaces/IBookRepository";
 
-export default class BookRepository {
+export default class BookRepository implements IBookRepository {
   private readonly filePath: string;
 
   constructor(filePath: string = "../../infra/db.json") {

@@ -1,13 +1,13 @@
 import NotFoundException from "../../exception/NotFoundException";
-import BookRepository from "../repository/BookRepository";
 import { bookSchemaToBookDTO } from "../../mapper/BookMapper";
 import { BookDTO } from "../dto/BookDTO";
 import { Book } from "../entity/Book";
+import IBookRepository from "../interfaces/IBookRepository";
 
-export default class BookService {
-  private readonly bookRepository: BookRepository;
+export default class BookService implements IBookRepository {
+  private readonly bookRepository: IBookRepository;
 
-  constructor(bookRepository: BookRepository = new BookRepository()) {
+  constructor(bookRepository: IBookRepository) {
     this.bookRepository = bookRepository;
   }
 
