@@ -4,7 +4,9 @@ import { DBSchema } from "../../infra/DBSchema";
 import { UserSchema } from "../../infra/UserSchema";
 import { User } from "../entity/User";
 import IUserRepository from "../interfaces/IUserRepository";
+import { injectable } from "inversify";
 
+@injectable()
 export default class UserRepository implements IUserRepository {
   private readonly filePath: string;
 

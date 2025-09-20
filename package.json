@@ -23,6 +23,7 @@
   "devDependencies": {
     "@types/express": "^5.0.3",
     "@types/express-validator": "^2.20.33",
+    "@types/inversify": "^2.0.32",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.2.0",
     "@types/supertest": "^6.0.3",
@@ -36,9 +37,12 @@
     "typescript": "^5.9.2"
   },
   "dependencies": {
+    "dotenv": "^17.2.2",
     "express": "^5.1.0",
     "express-validator": "^7.2.1",
     "fs": "^0.0.1-security",
+    "inversify": "^7.10.0",
+    "reflect-metadata": "^0.2.2",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"
   }

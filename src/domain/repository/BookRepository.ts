@@ -4,7 +4,9 @@ import { DBSchema } from "../../infra/DBSchema";
 import { Book } from "../entity/Book";
 import { BookSchema } from "../../infra/BookSchema";
 import IBookRepository from "../interfaces/IBookRepository";
+import { injectable } from "inversify";
 
+@injectable()
 export default class BookRepository implements IBookRepository {
   private readonly filePath: string;
 

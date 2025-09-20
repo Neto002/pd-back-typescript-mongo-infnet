@@ -5,12 +5,13 @@ import DataValidationException from "../../exception/DataValidationException";
 import { Book } from "../entity/Book";
 import { BookDTO } from "../dto/BookDTO";
 import IBookService from "../interfaces/IBookService";
+import { inject } from "inversify";
 
 export default class BookController {
   private readonly bookService: IBookService;
   public router: Router = Router();
 
-  constructor(bookService: IBookService) {
+  constructor(@inject("BookService") bookService: IBookService) {
     this.bookService = bookService;
     this.routes();
   }

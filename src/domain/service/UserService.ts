@@ -1,3 +1,4 @@
+import { inject, injectable } from "inversify";
 import NotFoundException from "../../exception/NotFoundException";
 import { userSchemaToViewUserDTO } from "../../mapper/UserMapper";
 import { CreateUserDTO } from "../dto/CreateUserDTO";
@@ -6,10 +7,11 @@ import IUserRepository from "../interfaces/IUserRepository";
 import IUserService from "../interfaces/IUserService";
 import { ViewUserDTO } from "./../dto/ViewUserDTO";
 
+@injectable()
 export default class UserService implements IUserService {
   private readonly userRepository: IUserRepository;
 
-  constructor(userRepository: IUserRepository) {
+  constructor(@inject("UserRepository") userRepository: IUserRepository) {
     this.userRepository = userRepository;
   }
 

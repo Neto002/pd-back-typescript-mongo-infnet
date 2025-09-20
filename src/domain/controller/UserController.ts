@@ -5,7 +5,9 @@ import NoDataProvidedException from "../../exception/NoDataProvidedException";
 import { CreateUserDTO } from "../dto/CreateUserDTO";
 import { User } from "../entity/User";
 import IUserService from "../interfaces/IUserService";
+import { inject, injectable } from "inversify";
 
+@injectable()
 /**
  * @swagger
  * tags:
@@ -16,7 +18,7 @@ export default class UserController {
   private readonly userService: IUserService;
   public router: Router = Router();
 
-  constructor(userService: IUserService) {
+  constructor(@inject("UserService") userService: IUserService) {
     this.userService = userService;
     this.routes();
   }

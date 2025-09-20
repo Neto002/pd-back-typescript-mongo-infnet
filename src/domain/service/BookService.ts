@@ -1,13 +1,15 @@
+import { inject, injectable } from "inversify";
 import NotFoundException from "../../exception/NotFoundException";
 import { bookSchemaToBookDTO } from "../../mapper/BookMapper";
 import { BookDTO } from "../dto/BookDTO";
 import { Book } from "../entity/Book";
 import IBookRepository from "../interfaces/IBookRepository";
 
+@injectable()
 export default class BookService implements IBookRepository {
   private readonly bookRepository: IBookRepository;
 
-  constructor(bookRepository: IBookRepository) {
+  constructor(@inject("BookRepository") bookRepository: IBookRepository) {
     this.bookRepository = bookRepository;
   }
 
