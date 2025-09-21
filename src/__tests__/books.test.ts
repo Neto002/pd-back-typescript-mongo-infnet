@@ -3,6 +3,7 @@ import express from "express";
 import routes from "../routes";
 import auth from "../middleware/auth";
 import exceptionHandler from "../middleware/exceptionHandler";
+import { ObjectId } from "mongodb";
 
 const API_KEY = "chaveSuperSecreta";
 
@@ -13,7 +14,7 @@ describe("Book Endpoints", () => {
   app.use("/api", routes);
   app.use(exceptionHandler);
 
-  let createdBookId: number;
+  let createdBookId: string;
 
   it("should fail authentication with wrong api-key", async () => {
     const res = await request(app).get("/api/books").set("api-key", "invalida");
@@ -27,9 +28,9 @@ describe("Book Endpoints", () => {
       .set("api-key", API_KEY)
       .send({ titulo: "teste", autor: "João", ano: 2025 });
     expect(res.status).toBe(201);
-    expect(res.body).toHaveProperty("id");
+    expect(res.body).toHaveProperty("_id");
     expect(res.body.titulo).toBe("teste");
-    createdBookId = res.body.id;
+    createdBookId = res.body._id.toString();
   });
 
   it("should get all books", async () => {
@@ -43,12 +44,12 @@ describe("Book Endpoints", () => {
       .get(`/api/books/${createdBookId}`)
       .set("api-key", API_KEY);
     expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty("id", createdBookId);
+    expect(res.body).toHaveProperty("_id", createdBookId);
   });
 
   it("should return 404 for non-existent book", async () => {
     const res = await request(app)
-      .get(`/api/books/99999`)
+      .get(`/api/books/${new ObjectId().toString()}`)
       .set("api-key", API_KEY);
     expect(res.status).toBe(404); // NotFoundException handled as 404
     expect(res.body).toHaveProperty("error");
@@ -77,12 +78,12 @@ describe("Book Endpoints", () => {
       .delete(`/api/books/${createdBookId}`)
       .set("api-key", API_KEY);
     expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty("id", createdBookId);
+    expect(res.body).toHaveProperty("_id", createdBookId);
   });
 
   it("should return 404 for delete non-existent book", async () => {
     const res = await request(app)
-      .delete(`/api/books/99999`)
+      .delete(`/api/books/${new ObjectId().toString()}`)
       .set("api-key", API_KEY);
     expect(res.status).toBe(404); // NotFoundException handled as 404
     expect(res.body).toHaveProperty("error");

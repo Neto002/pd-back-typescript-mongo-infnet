@@ -3,6 +3,7 @@ import express from "express";
 import routes from "../routes";
 import auth from "../middleware/auth";
 import exceptionHandler from "../middleware/exceptionHandler";
+import { ObjectId } from "mongodb";
 
 const API_KEY = "chaveSuperSecreta";
 
@@ -13,7 +14,7 @@ describe("User Endpoints", () => {
   app.use("/api", routes);
   app.use(exceptionHandler);
 
-  let createdUserId: number;
+  let createdUserId: string;
 
   it("should fail authentication with wrong api-key", async () => {
     const res = await request(app).get("/api/users").set("api-key", "invalida");
@@ -27,9 +28,9 @@ describe("User Endpoints", () => {
       .set("api-key", API_KEY)
       .send({ nome: "João", ativo: true });
     expect(res.status).toBe(201);
-    expect(res.body).toHaveProperty("id");
+    expect(res.body).toHaveProperty("_id");
     expect(res.body.nome).toBe("João");
-    createdUserId = res.body.id;
+    createdUserId = res.body._id.toString();
   });
 
   it("should get all users", async () => {
@@ -43,12 +44,12 @@ describe("User Endpoints", () => {
       .get(`/api/users/${createdUserId}`)
       .set("api-key", API_KEY);
     expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty("id", createdUserId);
+    expect(res.body).toHaveProperty("_id", createdUserId);
   });
 
   it("should return 404 for non-existent user", async () => {
     const res = await request(app)
-      .get(`/api/users/99999`)
+      .get(`/api/users/${new ObjectId().toString()}`)
       .set("api-key", API_KEY);
     expect(res.status).toBe(404); // NotFoundException handled as 404
     expect(res.body).toHaveProperty("error");
@@ -77,12 +78,12 @@ describe("User Endpoints", () => {
       .delete(`/api/users/${createdUserId}`)
       .set("api-key", API_KEY);
     expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty("id", createdUserId);
+    expect(res.body).toHaveProperty("_id", createdUserId);
   });
 
   it("should return 404 for delete non-existent user", async () => {
     const res = await request(app)
-      .delete(`/api/users/99999`)
+      .delete(`/api/users/${new ObjectId().toString()}`)
       .set("api-key", API_KEY);
     expect(res.status).toBe(404); // NotFoundException handled as 404
     expect(res.body).toHaveProperty("error");
