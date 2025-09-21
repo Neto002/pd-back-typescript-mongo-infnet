@@ -2,7 +2,7 @@
 
 ## Descrição
 
-Este projeto é uma API REST para gerenciamento de usuários e livros, desenvolvida em TypeScript com Express. Ele simula um banco de dados utilizando um arquivo JSON e implementa autenticação via header `api-key`. O sistema possui camadas bem definidas para controller, serviço, repositório, DTOs, entidades, mapeamento, exceções e middlewares.
+Este projeto é uma API REST para gerenciamento de usuários e livros, desenvolvida em TypeScript com Express. Ele utiliza o MongoDB como solução de banco de dados e implementa autenticação via header `api-key`. O sistema possui camadas bem definidas para controller, serviço, repositório, DTOs, entidades, mapeamento, exceções e middlewares.
 
 ## Estrutura do Projeto
 
@@ -16,7 +16,7 @@ Este projeto é uma API REST para gerenciamento de usuários e livros, desenvolv
     - **repository/**: Repositórios para acesso a dados (ex: UserRepository)
     - **service/**: Serviços de negócio (ex: UserService)
   - **exception/**: Classes de exceção personalizadas
-  - **infra/**: Infraestrutura (ex: db.json para simular o banco de dados)
+  - **infra/**: Infraestrutura (ex: schemas de documentos do MongoDB)
   - **mapper/**: Mapeamento entre entidades e DTOs
   - **middleware/**: Middlewares (logger, autenticação, tratamento de exceções)
   - **\_\_tests\_\_/**: Testes automatizados com Jest e Supertest
@@ -29,7 +29,6 @@ Este projeto é uma API REST para gerenciamento de usuários e livros, desenvolv
 - **Jest**: Testes automatizados
 - **Supertest**: Testes de integração para APIs
 - **ts-node / ts-node-dev**: Execução e desenvolvimento com TypeScript
-- **fs**: Manipulação de arquivos para persistência dos dados
 
 ## Autenticação
 
@@ -74,7 +73,6 @@ api-key: chaveSuperSecreta
 
 ## Observações
 
-- O banco de dados é simulado via arquivo db.json.
 - As rotas principais estão em `/api/users` e `/api/books`.
 - Para modificar ou adicionar entidades, utilize a estrutura de DTOs, entidades e serviços.
 - Os testes automatizados garantem o funcionamento dos endpoints e da autenticação.
