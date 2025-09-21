@@ -15,18 +15,18 @@ export default class UserService implements IUserService {
     this.userRepository = userRepository;
   }
 
-  getUsers(): ViewUserDTO[] {
+  async getUsers(): Promise<ViewUserDTO[]> {
     return this.userRepository
       .getUsers()
-      .map((user) => userSchemaToViewUserDTO(user));
+      .then((users) => users.map((user) => userSchemaToViewUserDTO(user)));
   }
 
-  getUserById(id: number): ViewUserDTO | undefined {
-    if (typeof id !== "number") {
-      throw new Error("Id must be a number");
+  async getUserById(id: string): Promise<ViewUserDTO | undefined> {
+    if (typeof id !== "string") {
+      throw new Error("Id must be a string");
     }
 
-    const user = this.userRepository.getUserById(id);
+    const user = await this.userRepository.getUserById(id);
 
     if (!user) {
       throw new NotFoundException("User not found");
@@ -35,24 +35,16 @@ export default class UserService implements IUserService {
     return userSchemaToViewUserDTO(user);
   }
 
-  createUser(user: CreateUserDTO): ViewUserDTO {
-    const users = this.userRepository.getUsers();
-
-    const maxId = users.reduce(
-      (prevUser, currUser) => (currUser.id > prevUser.id ? currUser : prevUser),
-      { id: 0 }
-    ).id;
-    const userId = maxId + 1;
-
-    const createdUser = this.userRepository.createUser(
-      new User(userId ?? 0, user.nome, user.ativo, user.saldo)
+  async createUser(user: CreateUserDTO): Promise<ViewUserDTO> {
+    const createdUser = await this.userRepository.createUser(
+      new User(user.nome, user.ativo, user.saldo)
     );
 
     return userSchemaToViewUserDTO(createdUser);
   }
 
-  deleteUser(id: number): ViewUserDTO | undefined {
-    const deletedUser = this.userRepository.deleteUser(id);
+  async deleteUser(id: string): Promise<ViewUserDTO | undefined> {
+    const deletedUser = await this.userRepository.deleteUser(id);
 
     if (!deletedUser) {
       throw new NotFoundException("User not found");
@@ -61,8 +53,11 @@ export default class UserService implements IUserService {
     return deletedUser ? userSchemaToViewUserDTO(deletedUser) : undefined;
   }
 
-  updateUser(id: number, updatedData: Partial<User>): ViewUserDTO | undefined {
-    const updatedUser = this.userRepository.updateUser(id, updatedData);
+  async updateUser(
+    id: string,
+    updatedData: Partial<User>
+  ): Promise<ViewUserDTO | undefined> {
+    const updatedUser = await this.userRepository.updateUser(id, updatedData);
 
     if (!updatedUser) {
       throw new NotFoundException("User not found");

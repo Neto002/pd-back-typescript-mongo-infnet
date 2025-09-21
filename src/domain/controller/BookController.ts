@@ -19,17 +19,32 @@ export default class BookController {
   public routes() {
     this.router.get(
       "/:id",
-      [param("id").notEmpty().isNumeric().withMessage("ID must be numeric")],
+      [
+        param("id")
+          .notEmpty()
+          .isAlphanumeric()
+          .withMessage("ID must be alphanumeric"),
+      ],
       this.getBookById.bind(this)
     );
     this.router.patch(
       "/:id",
-      [param("id").notEmpty().isNumeric().withMessage("ID must be numeric")],
+      [
+        param("id")
+          .notEmpty()
+          .isAlphanumeric()
+          .withMessage("ID must be alphanumeric"),
+      ],
       this.updateBook.bind(this)
     );
     this.router.delete(
       "/:id",
-      [param("id").notEmpty().isNumeric().withMessage("ID must be numeric")],
+      [
+        param("id")
+          .notEmpty()
+          .isAlphanumeric()
+          .withMessage("ID must be alphanumeric"),
+      ],
       this.deleteBook.bind(this)
     );
 
@@ -57,12 +72,12 @@ export default class BookController {
     );
   }
 
-  public getBooks(req: Request, res: Response) {
-    const books = this.bookService.getBooks();
+  public async getBooks(req: Request, res: Response) {
+    const books = await this.bookService.getBooks();
     return res.json(books);
   }
 
-  public getBookById(req: Request, res: Response) {
+  public async getBookById(req: Request, res: Response) {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -74,14 +89,14 @@ export default class BookController {
       );
     }
 
-    const id = Number(req.params.id);
+    const id = req.params.id.toString();
 
-    const book = this.bookService.getBookById(id);
+    const book = await this.bookService.getBookById(id);
 
     return res.json(book);
   }
 
-  public updateBook(req: Request, res: Response) {
+  public async updateBook(req: Request, res: Response) {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -93,19 +108,19 @@ export default class BookController {
       );
     }
 
-    const id = Number(req.params.id);
+    const id = req.params.id.toString();
     const updatedData: Partial<Book> = req.body;
 
     if (!updatedData || Object.keys(updatedData).length === 0) {
       throw new NoDataProvidedException("No data provided for update");
     }
 
-    const updatedBook = this.bookService.updateBook(id, updatedData);
+    const updatedBook = await this.bookService.updateBook(id, updatedData);
 
     return res.json(updatedBook);
   }
 
-  public createBook(req: Request, res: Response) {
+  public async createBook(req: Request, res: Response) {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -118,10 +133,10 @@ export default class BookController {
     }
 
     const newBook: BookDTO = req.body;
-    return res.status(201).json(this.bookService.createBook(newBook));
+    return res.status(201).json(await this.bookService.createBook(newBook));
   }
 
-  public deleteBook(req: Request, res: Response) {
+  public async deleteBook(req: Request, res: Response) {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -133,9 +148,9 @@ export default class BookController {
       );
     }
 
-    const id = Number(req.params.id);
+    const id = req.params.id.toString();
 
-    const deletedBook = this.bookService.deleteBook(id);
+    const deletedBook = await this.bookService.deleteBook(id);
 
     return res.json(deletedBook);
   }

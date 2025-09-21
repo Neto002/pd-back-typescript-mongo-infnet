@@ -1,5 +1,5 @@
 export type BookDTO = {
-  id: number;
+  _id: string;
   titulo: string;
   autor: string;
   ano: number;

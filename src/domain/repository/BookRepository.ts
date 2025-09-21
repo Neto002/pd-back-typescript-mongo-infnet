@@ -1,89 +1,152 @@
-import fs from "fs";
-import path from "path";
-import { DBSchema } from "../../infra/DBSchema";
 import { Book } from "../entity/Book";
 import { BookSchema } from "../../infra/BookSchema";
 import IBookRepository from "../interfaces/IBookRepository";
 import { injectable } from "inversify";
+import { Collection, MongoClient, ObjectId, ServerApiVersion } from "mongodb";
+import DbException from "../../exception/DbException";
+import { bookToBookSchema } from "../../mapper/BookMapper";
 
 @injectable()
 export default class BookRepository implements IBookRepository {
-  private readonly filePath: string;
+  private readonly mongoUri: string;
+  private readonly dbName: string;
+  private readonly collectionName: string;
 
-  constructor(filePath: string = "../../infra/db.json") {
-    this.filePath = path.join(__dirname, filePath);
+  constructor() {
+    this.mongoUri = process.env.MONGO_DB_KEY ?? "";
+    this.dbName = process.env.DB_NAME ?? "";
+    this.collectionName = "books";
   }
 
-  private accessDB(): DBSchema {
-    const db = fs.readFileSync(this.filePath, "utf-8");
-    return JSON.parse(db);
-  }
-
-  private rewriteDB(db: DBSchema): boolean {
+  private async getClientAndCollection(): Promise<{
+    client: MongoClient;
+    collection: Collection<BookSchema>;
+  }> {
+    const client = new MongoClient(this.mongoUri, {
+      serverApi: {
+        version: ServerApiVersion.v1,
+        strict: true,
+        deprecationErrors: true,
+      },
+    });
     try {
-      fs.writeFileSync(this.filePath, JSON.stringify(db, null, 2));
-      return true;
-    } catch (error) {
-      console.error("Error rewriting database:", error);
-      return false;
+      // Connect the client to the server	(optional starting in v4.7)
+      await client.connect();
+      // Send a ping to confirm a successful connection
+      const db = client.db(this.dbName);
+      const collection = db.collection<BookSchema>(this.collectionName);
+      return { client, collection };
+    } catch (e) {
+      if (e instanceof Error) {
+        throw new DbException("Error connecting to database.");
+      }
+      throw e;
+    } finally {
+      // Ensures that the client will close when you finish/error
+      await client.close();
     }
   }
 
-  public getBooks() {
-    const db = this.accessDB();
-    return db.books;
+  public async getBooks(): Promise<BookSchema[]> {
+    const db = await this.getClientAndCollection();
+    try {
+      await db.client.connect();
+      return await db.collection.find().toArray();
+    } catch (e) {
+      if (e instanceof Error) {
+        throw new DbException("Error fetching books from database.");
+      }
+      throw e;
+    } finally {
+      await db.client.close();
+    }
   }
 
-  public getBookById(id: number) {
-    const books = this.getBooks();
-    return books.find((book) => book.id === id);
+  public async getBookById(id: string): Promise<BookSchema | undefined> {
+    const db = await this.getClientAndCollection();
+    try {
+      await db.client.connect();
+      return await db.collection
+        .findOne({ _id: new ObjectId(id) })
+        .then((book) => book ?? undefined);
+    } catch (e) {
+      if (e instanceof Error) {
+        throw new DbException("Error fetching book from database.");
+      }
+      throw e;
+    } finally {
+      await db.client.close();
+    }
   }
 
-  public createBook(book: Book): BookSchema {
-    const books = this.getBooks();
-    books.push({ ...book });
-    const db = this.accessDB();
-    db.books = books;
-    this.rewriteDB(db);
-    return book;
+  public async createBook(book: Book): Promise<BookSchema> {
+    const db = await this.getClientAndCollection();
+    try {
+      await db.client.connect();
+      const insertedId = await db.collection
+        .insertOne(book)
+        .then((result) => result.insertedId);
+
+      book._id = insertedId;
+
+      return bookToBookSchema(book);
+    } catch (e) {
+      if (e instanceof Error) {
+        throw new DbException("Error creating book.");
+      }
+      throw e;
+    } finally {
+      await db.client.close();
+    }
   }
 
-  public deleteBook(id: number): BookSchema | undefined {
-    const book = this.getBookById(id);
+  public async deleteBook(id: string): Promise<BookSchema | undefined> {
+    const book = await this.getBookById(id);
 
     if (!book) {
       return undefined;
     }
 
-    const books = this.getBooks();
-    const bookIndex = books.findIndex((book) => book.id === id);
-    books.splice(bookIndex, 1);
-
-    const db = this.accessDB();
-    db.books = books;
-    this.rewriteDB(db);
-
-    return book;
+    const db = await this.getClientAndCollection();
+    try {
+      await db.client.connect();
+      await db.collection.deleteOne({ _id: new ObjectId(id) });
+      return book;
+    } catch (e) {
+      if (e instanceof Error) {
+        throw new DbException("Error deleting book from database.");
+      }
+      throw e;
+    } finally {
+      await db.client.close();
+    }
   }
 
-  public updateBook(
-    id: number,
+  public async updateBook(
+    id: string,
     updatedData: Partial<Book>
-  ): BookSchema | undefined {
-    const books = this.getBooks();
-    const bookIndex = books.findIndex((book) => book.id === id);
+  ): Promise<BookSchema | undefined> {
+    const book = await this.getBookById(id);
 
-    if (bookIndex === -1) {
-      return undefined; // Book not found
+    if (!book) {
+      return undefined;
     }
 
-    books[bookIndex] = { ...books[bookIndex], ...updatedData, id };
-
-    const db = this.accessDB();
-    db.books = books;
-
-    const success = this.rewriteDB(db);
-
-    return success ? books[bookIndex] : undefined;
+    const db = await this.getClientAndCollection();
+    try {
+      await db.client.connect();
+      await db.collection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: updatedData }
+      );
+      return this.getBookById(id);
+    } catch (e) {
+      if (e instanceof Error) {
+        throw new DbException("Error updating book in database.");
+      }
+      throw e;
+    } finally {
+      await db.client.close();
+    }
   }
 }

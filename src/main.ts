@@ -8,8 +8,8 @@ import setupSwagger from "./config/Swagger";
 const app = express();
 const port = 3000;
 
-app.use(express.json());
 setupSwagger(app);
+app.use(express.json());
 
 app.use(logger);
 app.use(auth);

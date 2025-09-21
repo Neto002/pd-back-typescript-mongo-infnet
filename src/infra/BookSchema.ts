@@ -1,5 +1,7 @@
+import { ObjectId } from "mongodb";
+
 export type BookSchema = {
-  id: number;
+  _id: ObjectId;
   titulo: string;
   autor: string;
   ano: number;

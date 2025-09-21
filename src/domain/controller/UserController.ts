@@ -51,7 +51,12 @@ export default class UserController {
      */
     this.router.get(
       "/:id",
-      [param("id").notEmpty().isNumeric().withMessage("ID must be numeric")],
+      [
+        param("id")
+          .notEmpty()
+          .isAlphanumeric()
+          .withMessage("ID must be alphanumeric"),
+      ],
       this.getUserById.bind(this)
     );
 
@@ -88,7 +93,12 @@ export default class UserController {
      */
     this.router.patch(
       "/:id",
-      [param("id").notEmpty().isNumeric().withMessage("ID must be numeric")],
+      [
+        param("id")
+          .notEmpty()
+          .isAlphanumeric()
+          .withMessage("ID must be alphanumeric"),
+      ],
       this.updateUser.bind(this)
     );
 
@@ -119,7 +129,12 @@ export default class UserController {
      */
     this.router.delete(
       "/:id",
-      [param("id").notEmpty().isNumeric().withMessage("ID must be numeric")],
+      [
+        param("id")
+          .notEmpty()
+          .isAlphanumeric()
+          .withMessage("ID must be alphanumeric"),
+      ],
       this.deleteUser.bind(this)
     );
 
@@ -181,12 +196,12 @@ export default class UserController {
     );
   }
 
-  public getUsers(req: Request, res: Response) {
-    const users = this.userService.getUsers();
+  public async getUsers(req: Request, res: Response) {
+    const users = await this.userService.getUsers();
     return res.json(users);
   }
 
-  public getUserById(req: Request, res: Response) {
+  public async getUserById(req: Request, res: Response) {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -198,14 +213,14 @@ export default class UserController {
       );
     }
 
-    const id = Number(req.params.id);
+    const id = req.params.id.toString();
 
-    const user = this.userService.getUserById(id);
+    const user = await this.userService.getUserById(id);
 
     return res.json(user);
   }
 
-  public updateUser(req: Request, res: Response) {
+  public async updateUser(req: Request, res: Response) {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -217,19 +232,19 @@ export default class UserController {
       );
     }
 
-    const id = Number(req.params.id);
+    const id = req.params.id.toString();
     const updatedData: Partial<User> = req.body;
 
     if (!updatedData || Object.keys(updatedData).length === 0) {
       throw new NoDataProvidedException("No data provided for update");
     }
 
-    const updatedUser = this.userService.updateUser(id, updatedData);
+    const updatedUser = await this.userService.updateUser(id, updatedData);
 
     return res.json(updatedUser);
   }
 
-  public createUser(req: Request, res: Response) {
+  public async createUser(req: Request, res: Response) {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -242,10 +257,10 @@ export default class UserController {
     }
 
     const newUser: CreateUserDTO = req.body;
-    return res.status(201).json(this.userService.createUser(newUser));
+    return res.status(201).json(await this.userService.createUser(newUser));
   }
 
-  public deleteUser(req: Request, res: Response) {
+  public async deleteUser(req: Request, res: Response) {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -257,9 +272,9 @@ export default class UserController {
       );
     }
 
-    const id = Number(req.params.id);
+    const id = req.params.id.toString();
 
-    const deletedUser = this.userService.deleteUser(id);
+    const deletedUser = await this.userService.deleteUser(id);
 
     return res.json(deletedUser);
   }

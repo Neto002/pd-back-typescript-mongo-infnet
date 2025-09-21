@@ -1,11 +1,13 @@
+import { ObjectId } from "mongodb";
+
 export class Book {
-  id: number;
+  _id: ObjectId;
   titulo: string;
   autor: string;
   ano: number;
 
-  constructor(id: number, titulo: string, autor: string, ano: number) {
-    this.id = id;
+  constructor(titulo: string, autor: string, ano: number) {
+    this._id = new ObjectId();
     this.titulo = titulo;
     this.autor = autor;
     this.ano = ano;

@@ -3,9 +3,12 @@ import { User } from "../entity/User";
 import { ViewUserDTO } from "./../dto/ViewUserDTO";
 
 export default interface IUserService {
-  getUsers(): ViewUserDTO[];
-  getUserById(id: number): ViewUserDTO | undefined;
-  createUser(user: CreateUserDTO): ViewUserDTO;
-  deleteUser(id: number): ViewUserDTO | undefined;
-  updateUser(id: number, updatedData: Partial<User>): ViewUserDTO | undefined;
+  getUsers(): Promise<ViewUserDTO[]>;
+  getUserById(id: string): Promise<ViewUserDTO | undefined>;
+  createUser(user: CreateUserDTO): Promise<ViewUserDTO>;
+  deleteUser(id: string): Promise<ViewUserDTO | undefined>;
+  updateUser(
+    id: string,
+    updatedData: Partial<User>
+  ): Promise<ViewUserDTO | undefined>;
 }

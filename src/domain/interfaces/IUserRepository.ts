@@ -2,9 +2,12 @@ import { User } from "../entity/User";
 import { UserSchema } from "../../infra/UserSchema";
 
 export default interface IUserRepository {
-  getUsers(): UserSchema[];
-  getUserById(id: number): UserSchema | undefined;
-  createUser(user: User): UserSchema;
-  deleteUser(id: number): UserSchema | undefined;
-  updateUser(id: number, updatedData: Partial<User>): UserSchema | undefined;
+  getUsers(): Promise<UserSchema[]>;
+  getUserById(id: string): Promise<UserSchema | undefined>;
+  createUser(user: User): Promise<UserSchema>;
+  deleteUser(id: string): Promise<UserSchema | undefined>;
+  updateUser(
+    id: string,
+    updatedData: Partial<User>
+  ): Promise<UserSchema | undefined>;
 }

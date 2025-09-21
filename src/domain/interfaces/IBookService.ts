@@ -2,9 +2,12 @@ import { BookDTO } from "../dto/BookDTO";
 import { Book } from "../entity/Book";
 
 export default interface IBookService {
-  getBooks(): BookDTO[];
-  getBookById(id: number): BookDTO | undefined;
-  createBook(book: BookDTO): BookDTO;
-  deleteBook(id: number): BookDTO | undefined;
-  updateBook(id: number, updatedData: Partial<Book>): BookDTO | undefined;
+  getBooks(): Promise<BookDTO[]>;
+  getBookById(id: string): Promise<BookDTO | undefined>;
+  createBook(book: BookDTO): Promise<BookDTO>;
+  deleteBook(id: string): Promise<BookDTO | undefined>;
+  updateBook(
+    id: string,
+    updatedData: Partial<Book>
+  ): Promise<BookDTO | undefined>;
 }

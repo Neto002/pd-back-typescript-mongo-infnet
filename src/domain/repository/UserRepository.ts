@@ -1,90 +1,155 @@
-import fs from "fs";
-import path from "path";
-import { DBSchema } from "../../infra/DBSchema";
 import { UserSchema } from "../../infra/UserSchema";
 import { User } from "../entity/User";
 import IUserRepository from "../interfaces/IUserRepository";
 import { injectable } from "inversify";
+import dotenv from "dotenv";
+import { Collection, MongoClient, ObjectId, ServerApiVersion } from "mongodb";
+import DbException from "../../exception/DbException";
+import { userToUserSchema } from "../../mapper/UserMapper";
+
+dotenv.config();
 
 @injectable()
 export default class UserRepository implements IUserRepository {
-  private readonly filePath: string;
+  private readonly mongoUri: string;
+  private readonly dbName: string;
+  private readonly collectionName: string;
 
-  constructor(filePath: string = "../../infra/db.json") {
-    this.filePath = path.join(__dirname, filePath);
+  constructor() {
+    this.mongoUri = process.env.MONGO_DB_KEY ?? "";
+    this.dbName = process.env.DB_NAME ?? "";
+    this.collectionName = "users";
   }
 
-  private accessDB(): DBSchema {
-    const db = fs.readFileSync(this.filePath, "utf-8");
-    return JSON.parse(db);
-  }
-
-  private rewriteDB(db: DBSchema): boolean {
+  private async getClientAndCollection(): Promise<{
+    client: MongoClient;
+    collection: Collection<UserSchema>;
+  }> {
+    const client = new MongoClient(this.mongoUri, {
+      serverApi: {
+        version: ServerApiVersion.v1,
+        strict: true,
+        deprecationErrors: true,
+      },
+    });
     try {
-      fs.writeFileSync(this.filePath, JSON.stringify(db, null, 2));
-      return true;
-    } catch (error) {
-      console.error("Error rewriting database:", error);
-      return false;
+      // Connect the client to the server	(optional starting in v4.7)
+      await client.connect();
+      // Send a ping to confirm a successful connection
+      const db = client.db(this.dbName);
+      const collection = db.collection<UserSchema>(this.collectionName);
+      return { client, collection };
+    } catch (e) {
+      if (e instanceof Error) {
+        throw new DbException("Error connecting to database.");
+      }
+      throw e;
+    } finally {
+      // Ensures that the client will close when you finish/error
+      await client.close();
     }
   }
 
-  public getUsers() {
-    const db = this.accessDB();
-    return db.users;
+  public async getUsers(): Promise<UserSchema[]> {
+    const db = await this.getClientAndCollection();
+    try {
+      await db.client.connect();
+      return await db.collection.find().toArray();
+    } catch (e) {
+      if (e instanceof Error) {
+        throw new DbException("Error fetching users from database.");
+      }
+      throw e;
+    } finally {
+      await db.client.close();
+    }
   }
 
-  public getUserById(id: number) {
-    const users = this.getUsers();
-    return users.find((user) => user.id === id);
+  public async getUserById(id: string): Promise<UserSchema | undefined> {
+    const db = await this.getClientAndCollection();
+    try {
+      await db.client.connect();
+      return await db.collection
+        .findOne({ _id: new ObjectId(id) })
+        .then((user) => user ?? undefined);
+    } catch (e) {
+      if (e instanceof Error) {
+        throw new DbException("Error fetching user from database.");
+      }
+      throw e;
+    } finally {
+      await db.client.close();
+    }
   }
 
-  public createUser(user: User): UserSchema {
-    const users = this.getUsers();
-    users.push({ ...user });
-    const db = this.accessDB();
-    db.users = users;
-    this.rewriteDB(db);
-    return user;
+  public async createUser(user: User): Promise<UserSchema> {
+    const db = await this.getClientAndCollection();
+    try {
+      await db.client.connect();
+      const insertedId = await db.collection
+        .insertOne(user)
+        .then((result) => result.insertedId);
+
+      user._id = insertedId;
+
+      return userToUserSchema(user);
+    } catch (e) {
+      if (e instanceof Error) {
+        throw new DbException("Error creating user.");
+      }
+      throw e;
+    } finally {
+      await db.client.close();
+    }
   }
 
-  public deleteUser(id: number): UserSchema | undefined {
-    const user = this.getUserById(id);
+  public async deleteUser(id: string): Promise<UserSchema | undefined> {
+    const user = await this.getUserById(id);
 
     if (!user) {
       return undefined;
     }
 
-    const users = this.getUsers();
-    const userIndex = users.findIndex((user) => user.id === id);
-
-    users.splice(userIndex, 1);
-
-    const db = this.accessDB();
-    db.users = users;
-    this.rewriteDB(db);
-
-    return user;
+    const db = await this.getClientAndCollection();
+    try {
+      await db.client.connect();
+      await db.collection.deleteOne({ _id: new ObjectId(id) });
+      return user;
+    } catch (e) {
+      if (e instanceof Error) {
+        throw new DbException("Error deleting user from database.");
+      }
+      throw e;
+    } finally {
+      await db.client.close();
+    }
   }
 
-  public updateUser(
-    id: number,
+  public async updateUser(
+    id: string,
     updatedData: Partial<User>
-  ): UserSchema | undefined {
-    const users = this.getUsers();
-    const userIndex = users.findIndex((user) => user.id === id);
+  ): Promise<UserSchema | undefined> {
+    const user = await this.getUserById(id);
 
-    if (userIndex === -1) {
-      return undefined; // User not found
+    if (!user) {
+      return undefined;
     }
 
-    users[userIndex] = { ...users[userIndex], ...updatedData, id };
-
-    const db = this.accessDB();
-    db.users = users;
-
-    const success = this.rewriteDB(db);
-
-    return success ? users[userIndex] : undefined;
+    const db = await this.getClientAndCollection();
+    try {
+      await db.client.connect();
+      await db.collection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: updatedData }
+      );
+      return this.getUserById(id);
+    } catch (e) {
+      if (e instanceof Error) {
+        throw new DbException("Error updating user in database.");
+      }
+      throw e;
+    } finally {
+      await db.client.close();
+    }
   }
 }

@@ -1,5 +1,6 @@
 export type ViewUserDTO = {
-  id: number;
+  _id: string;
   nome: string;
   ativo: boolean;
+  saldo: number;
 };
