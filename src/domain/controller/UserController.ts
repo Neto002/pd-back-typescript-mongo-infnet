@@ -6,6 +6,7 @@ import { CreateUserDTO } from "../dto/CreateUserDTO";
 import { User } from "../entity/User";
 import IUserService from "../interfaces/IUserService";
 import { inject, injectable } from "inversify";
+import { ObjectId } from "mongodb";
 
 @injectable()
 /**
@@ -54,8 +55,9 @@ export default class UserController {
       [
         param("id")
           .notEmpty()
-          .isAlphanumeric()
-          .withMessage("ID must be alphanumeric"),
+          .withMessage("ID is required")
+          .custom((id) => ObjectId.isValid(id))
+          .withMessage("ID must be a valid MongoDB ObjectId"),
       ],
       this.getUserById.bind(this)
     );
@@ -96,8 +98,9 @@ export default class UserController {
       [
         param("id")
           .notEmpty()
-          .isAlphanumeric()
-          .withMessage("ID must be alphanumeric"),
+          .withMessage("ID is required")
+          .custom((id) => ObjectId.isValid(id))
+          .withMessage("ID must be a valid MongoDB ObjectId"),
       ],
       this.updateUser.bind(this)
     );
@@ -132,8 +135,9 @@ export default class UserController {
       [
         param("id")
           .notEmpty()
-          .isAlphanumeric()
-          .withMessage("ID must be alphanumeric"),
+          .withMessage("ID is required")
+          .custom((id) => ObjectId.isValid(id))
+          .withMessage("ID must be a valid MongoDB ObjectId"),
       ],
       this.deleteUser.bind(this)
     );

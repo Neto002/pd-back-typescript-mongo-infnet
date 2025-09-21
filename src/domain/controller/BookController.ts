@@ -6,6 +6,7 @@ import { Book } from "../entity/Book";
 import { BookDTO } from "../dto/BookDTO";
 import IBookService from "../interfaces/IBookService";
 import { inject } from "inversify";
+import { ObjectId } from "mongodb";
 
 export default class BookController {
   private readonly bookService: IBookService;
@@ -22,8 +23,9 @@ export default class BookController {
       [
         param("id")
           .notEmpty()
-          .isAlphanumeric()
-          .withMessage("ID must be alphanumeric"),
+          .withMessage("ID is required")
+          .custom((id) => ObjectId.isValid(id))
+          .withMessage("ID must be a valid MongoDB ObjectId"),
       ],
       this.getBookById.bind(this)
     );
@@ -32,8 +34,9 @@ export default class BookController {
       [
         param("id")
           .notEmpty()
-          .isAlphanumeric()
-          .withMessage("ID must be alphanumeric"),
+          .withMessage("ID is required")
+          .custom((id) => ObjectId.isValid(id))
+          .withMessage("ID must be a valid MongoDB ObjectId"),
       ],
       this.updateBook.bind(this)
     );
@@ -42,8 +45,9 @@ export default class BookController {
       [
         param("id")
           .notEmpty()
-          .isAlphanumeric()
-          .withMessage("ID must be alphanumeric"),
+          .withMessage("ID is required")
+          .custom((id) => ObjectId.isValid(id))
+          .withMessage("ID must be a valid MongoDB ObjectId"),
       ],
       this.deleteBook.bind(this)
     );
